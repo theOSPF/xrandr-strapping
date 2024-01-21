@@ -103,7 +103,7 @@ function RIGHT {
 function choosen_one {
     cur_idx=$(((${#arr[@]}>>1) * ${#arr[@]} + (${#arr[@]}>>1)))
     # echo -e $clc_str
-    clear_n $((2*${#arr[@]}+2))
+    clear_n $((2*${#arr[@]}+1))
     input="-1"
     ESC=$'\033'
     while true;
@@ -144,9 +144,14 @@ function choosen_one {
 for ((;;))
 do 
     draw_cur_mons
-    read from
-    to=0
-    choosen_one 
-    idx[$from]=$to
-    # echo -e "\033[2A"
+    read -n1 from
+    if (($from == "q" || $from == "Q"));then
+        printf "\r\033[K"
+        break
+    elif [[ ! $input || $input = *[^0-9]* ]];then
+        # printf "\r\033[K"
+        to=0
+        choosen_one 
+        idx[$from]=$to
+    fi
 done
