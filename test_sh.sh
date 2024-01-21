@@ -21,7 +21,7 @@ function draw_cur_mons {
             for it in ${!idx[@]}
             do
                 if (($((${#arr[@]}*$i+$j)) == ${idx[$it]})); then
-                    out_str+="_$it_|"
+                    out_str+="_""$it""_|"
                     flg=1
                     break 1
                 fi
@@ -47,16 +47,29 @@ function draw_cur {
             if ((${matrix[$((${#arr[@]}*$i+$j))]} == $1)); then
                 out_str+="_+_|"
             else
-                out_str+="___|"
+                flg=0
+                for it in ${!idx[@]}
+                do
+                    if (($((${#arr[@]}*$i+$j)) == ${idx[$it]})); then
+                        out_str+="_""$it""_|"
+                        flg=1
+                        break 1
+                    fi
+                done
+                [[ $flg = 1 ]] && continue
+                out_str+="___|" 
             fi        
         done
         echo $out_str
     done    
-    echo ${arr[@]}
 }
 # TODO сделать, чтоб решётка не ехала
-clc_str="\033[""$((2*${#arr[@]}))""A"
-
+# clc_str="\033[""$((2*${#arr[@]}+2))""A"
+# $((2*${#arr[@]}+2))
+function clear_n {
+    local clc_str="\033[""$1""A"
+    echo -e $clc_str
+}
 
 
 function mod() {
@@ -89,43 +102,51 @@ function RIGHT {
 
 function choosen_one {
     cur_idx=$(((${#arr[@]}>>1) * ${#arr[@]} + (${#arr[@]}>>1)))
-    echo $cur_idx
+    # echo -e $clc_str
+    clear_n $((2*${#arr[@]}+2))
     input="-1"
+    ESC=$'\033'
     while true;
     do
         draw_cur $cur_idx
-        echo ${idx[@]}
+        for it in ${!arr[@]}
+        do
+            out_str="$it ${arr[it]}"
+            echo $out_str
+        done
         
         read -rsn1 input
         case $input in
-            "w" | "W")
+            "w" | "W" | A) # "[D"
                 cur_idx=$(UP $cur_idx)
             ;;
-            "a" | "A")
+            "a" | "A" | D) # "[C"
                 cur_idx=$(LEFT $cur_idx)
             ;;
-            "s" | "S")
+            "s" | "S" | B)
                 cur_idx=$(DOWN $cur_idx)
             ;;
-            "d" | "D")
+            "d" | "D" | C)
                 cur_idx=$(RIGHT $cur_idx)
             ;;
             "")
+                clear_n $((2*${#arr[@]}+1))
                 break
             ;;
         esac
-        echo -e $clc_str
+        clear_n $((2*${#arr[@]}+1))
     done
-    echo $cur_idx
+    to=$cur_idx
 }
 
 
-choosen_one
-# for ((;;))
-# do 
-#     draw_cur_mons
-#     read from
-#     to=$(choosen_one)
-#     idx[$from]=$to
-#     echo -e "\033[2A"
-# done
+
+for ((;;))
+do 
+    draw_cur_mons
+    read from
+    to=0
+    choosen_one 
+    idx[$from]=$to
+    # echo -e "\033[2A"
+done
