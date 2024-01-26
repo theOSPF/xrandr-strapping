@@ -168,6 +168,15 @@ for ((;;))
 do 
     draw_cur_mons
     read -n1 from
+    case $from in
+        'q' | 'Q')
+        printf "\r\033[K"
+        break
+        ;;
+        *[^0-9]*)
+
+        ;;
+    esac
     # if (($from == "q" || $from == "Q"));then
     #     printf "\r\033[K"
     #     break
