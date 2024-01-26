@@ -33,7 +33,7 @@ function draw_cur_mons {
     done    
     for it in ${!arr[@]}
     do
-        out_str="$it ${arr[it]}"
+        out_str="$it ${arr[it]}           ${idx[it]}"
         echo $out_str
     done
 }
@@ -139,19 +139,49 @@ function choosen_one {
     to=$cur_idx
 }
 
+function set_idx {
+    local from_idx=$1   #from
+    local disp_idx=$2   #to
+    local flag=0
+    local similar_idx=-1
+    for it in ${!idx[@]}
+    do
+        if [ ${idx[it]} -eq $disp_idx ];then
+            flag=1
+            similar_idx=$it
+            break 1
+        fi
+    done    
 
+    if [ $flag -eq 1 ];then
+        if [ $from_idx -ne $similar_idx ];then
+            let "idx[$from_idx]=${idx[$from_idx]}^${idx[$similar_idx]}"
+            let "idx[$similar_idx]=${idx[$from_idx]}^${idx[$similar_idx]}"
+            let "idx[$from_idx]=${idx[$from_idx]}^${idx[$similar_idx]}"
+        fi
+    else
+        idx[$from_idx]=$disp_idx
+    fi
+}
 
 for ((;;))
 do 
     draw_cur_mons
     read -n1 from
-    if (($from == "q" || $from == "Q"));then
+    # if (($from == "q" || $from == "Q"));then
+    #     printf "\r\033[K"
+    #     break
+    # elif [[ ! $from || $from = *[^0-9]* ]];then
         printf "\r\033[K"
-        break
-    elif [[ ! $input || $input = *[^0-9]* ]];then
-        # printf "\r\033[K"
         to=0
         choosen_one 
-        idx[$from]=$to
-    fi
+        set_idx $from $to
+        
+    # fi
 done
+
+    # draw_cur_mons
+    # read -n1 from
+    #     to=0
+    #     choosen_one 
+    # echo ${idx[@]}
