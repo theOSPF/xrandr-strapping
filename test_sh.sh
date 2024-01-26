@@ -170,27 +170,14 @@ do
     read -n1 from
     case $from in
         'q' | 'Q')
-        printf "\r\033[K"
-        break
+            printf "\r\033[K"
+            break
         ;;
         *[^0-9]*)
-
+            printf "\r\033[K"
+            to=0
+            choosen_one 
+            set_idx $from $to
         ;;
     esac
-    # if (($from == "q" || $from == "Q"));then
-    #     printf "\r\033[K"
-    #     break
-    # elif [[ ! $from || $from = *[^0-9]* ]];then
-        printf "\r\033[K"
-        to=0
-        choosen_one 
-        set_idx $from $to
-        
-    # fi
 done
-
-    # draw_cur_mons
-    # read -n1 from
-    #     to=0
-    #     choosen_one 
-    # echo ${idx[@]}
