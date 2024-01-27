@@ -56,8 +56,14 @@ function draw_cur {
 # clc_str="\033[""$((2*${#mons[@]}+2))""A"
 # $((2*${#mons[@]}+2))
 function clear_n {
-    local clc_str="\033[""$1""A"
-    echo -e $clc_str
+    # local clc_str="\033[""$1""A"
+    # echo -e $clc_str
+    local num_str=$(($1))
+    for it in `seq 0 1 $num_str`
+    do
+        echo -e "\033[2A"
+        printf "\r\033[K"
+    done
 }
 
 
@@ -92,9 +98,9 @@ function RIGHT {
 function choosen_one {
     cur_idx=$(((${#mons[@]}>>1) * ${#mons[@]} + (${#mons[@]}>>1)))
     # echo -e $clc_str
-    clear_n $((2*${#mons[@]}+1))
+    clear_n $((2*${#mons[@]}-1))
     input="-1"
-    ESC=$'\033'
+
     while true;
     do
         draw_cur $cur_idx
@@ -119,11 +125,11 @@ function choosen_one {
                 cur_idx=$(RIGHT $cur_idx)
             ;;
             "")
-                clear_n $((2*${#mons[@]}+1))
+                clear_n $((2*${#mons[@]}-1))
                 break
             ;;
         esac
-        clear_n $((2*${#mons[@]}+1))
+        clear_n $((2*${#mons[@]}-1))
     done
     to=$cur_idx
 }
@@ -156,11 +162,11 @@ function set_idx {
 mons=($(xrandr | grep -aoP ".+?\s(?=connected)" | tr " " "\n"))
 primary=$(xrandr | grep -aoP ".+?\s(?=connected primary)")
 last_mon=$primary
-idx=$mons
+idx=${!mons[@]}
 
-for it in ${idx[@]}
+for it in `seq 0 1 ${#idx[@]}`
 do
-	it=-1
+	idx[it]=-1
 done
 
 declare -a matrix
@@ -172,57 +178,59 @@ do
     matrix[$it]=$it
 done
 
-#TODO сделать проверку на конфигурацию и выбор шаблона
+    #TODO сделать проверку на конфигурацию и выбор шаблона
 echo -e "Unknown configuration :( \n Entering manual mode..."
+for ((;;))
+do
+    echo -e "\n Choose Wisely... \n 1) Save configuration and exit \n 2) Manual configuration \n 3) Off all exept primary"
 
-echo -e "\n Choose Wisely... \n 1) Save configuration and exit \n 2) Manual configuration \n 3) Off all exept primary"
+    read checker
+    clear_n 0
+    case $checker in
+    1)
+        echo "dsdsdss"
+    ;;
+    2)
+        for ((;;))
+        do 
+            draw_cur_mons
+            read -n1 from
+            printf "\r\033[K"
+            re='^[0-9]'
+            if ! [[ $from =~ $re ]] ; then
+                clear_n $((2*${#mons[@]}-1))
+                case $from in
+                    'q'|'Q')
+                        break
+                    ;;
+                    *)
+                        continue
+                    ;;
+                esac
+            fi
+            to=0
+            choosen_one 
+            set_idx $from $to
+        done
+    ;;
+    3)
+        for mon in ${mons[@]}
+        do
+            echo $mon
+            if [ $mon != $primary ];
+                then
+                    pwd
+                # xrandr --output $mon --off
+            fi
+        done
+    ;;
+    *)
+        break
+    ;;
 
-read checker
-
-case $checker in
-
- 1 )
- echo "dsdsdss"
- ;;
-
- 2 )
-    for ((;;))
-    do 
-        draw_cur_mons
-        read -n1 from
-        case $from in
-            'q' | 'Q')
-                printf "\r\033[K"
-                break
-            ;;
-            *[^0-9]*)
-                printf "\r\033[K"
-                to=0
-                choosen_one 
-                set_idx $from $to
-            ;;
-        esac
-    done
- ;;
-
- 3 )
-    for mon in ${mons[@]}
-    do
-        echo $mon
-        if [ $mon != $primary ];
-            then
-                pwd
-               # xrandr --output $mon --off
-        fi
-    done
- ;;
-
- *)
-
- ;;
-
-esac
-
+    esac
+    clear_n 6
+done
 echo "All Done! Quiting..."
 
 # Первичное выстраивание в ряд

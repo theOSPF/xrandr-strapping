@@ -67,8 +67,14 @@ function draw_cur {
 # clc_str="\033[""$((2*${#arr[@]}+2))""A"
 # $((2*${#arr[@]}+2))
 function clear_n {
-    local clc_str="\033[""$1""A"
-    echo -e $clc_str
+    # local clc_str="\033[""$1""A"
+    # echo -e $clc_str
+    local num_str=$(($1))
+    for it in `seq 0 1 $num_str`
+    do
+        echo -e "\033[2A"
+        printf "\r\033[K"
+    done
 }
 
 
@@ -164,20 +170,26 @@ function set_idx {
     fi
 }
 
-for ((;;))
-do 
-    draw_cur_mons
-    read -n1 from
-    case $from in
-        'q' | 'Q')
-            printf "\r\033[K"
-            break
-        ;;
-        *[^0-9]*)
-            printf "\r\033[K"
-            to=0
-            choosen_one 
-            set_idx $from $to
-        ;;
-    esac
-done
+# for ((;;))
+# do 
+#     draw_cur_mons
+#     read -n1 from
+#     case $from in
+#         'q' | 'Q')
+#             printf "\r\033[K"
+#             break
+#         ;;
+#         *[^0-9]*)
+#             printf "\r\033[K"
+#             to=0
+#             choosen_one 
+#             set_idx $from $to
+#         ;;
+#     esac
+# done
+
+echo "aaaaaaaaaaaaaaaaa"
+echo "bbbbbbbbbbbbbbbbb"
+read aaaa
+clear_n 2
+read aaaa
