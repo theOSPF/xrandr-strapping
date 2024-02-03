@@ -159,6 +159,83 @@ function set_idx {
     fi
 }
 
+function check_index {
+    local idx_for_check=$1
+    local flag=0
+    for ids in ${idx[@]}
+    do 
+        if [ $idx_for_check -eq $ids ]; then
+            flag=1
+            break
+        fi
+    done
+    echo $flag
+}
+
+function find_mon_idx {
+    local matrix_idx=$1
+    local out_idx=-1
+
+    for it in ${!idx[@]}
+    do
+        if [ $matrix_idx -eq ${idx[it]} ]; then
+            out_idx=$it
+            break
+        fi
+    done
+    echo $out_idx
+}
+
+
+function set_monitor_position {
+    local prev_idx=$1
+    local curr_idx=$2
+    local curr_idx_up=$(check_index $(UP $curr_idx))
+    local curr_idx_down=$(check_index $(DOWN $curr_idx))
+    local curr_idx_left=$(check_index $(LEFT $curr_idx))
+    local curr_idx_right=$(check_index $(RIGHT $curr_idx))
+    local monitor_idx=0
+    local curr_monitor_idx=$(find_mon_idx $curr_idx)
+
+    if [ $curr_idx_up -eq 1 ]; then
+        if [ $(($curr_idx/${#mons[@]})) -ne 0 ]; then
+            if [ $(UP $curr_idx) -ne $prev_idx ]; then
+                monitor_idx=$(find_mon_idx $(UP $curr_idx))
+                conf_str+="xrandr --output ${mons[monitor_idx]} --above ${mons[curr_monitor_idx]};"
+                set_monitor_position $curr_idx $(UP $curr_idx)
+            fi
+        fi
+    fi
+    if [ $curr_idx_down -eq 1 ]; then
+        if [ $(($curr_idx/${#mons[@]})) -ne $((${#mons[@]}-1)) ]; then
+            if [ $(DOWN $curr_idx) -ne $prev_idx ]; then
+                monitor_idx=$(find_mon_idx $(DOWN $curr_idx))
+                conf_str+="xrandr --output ${mons[monitor_idx]} --below ${mons[curr_monitor_idx]};"
+                set_monitor_position $curr_idx $(DOWN $curr_idx)
+            fi
+        fi
+    fi
+    if [ $curr_idx_left -eq 1 ]; then
+        if [ $(($curr_idx%${#mons[@]})) -ne 0 ]; then
+            if [ $(LEFT $curr_idx) -ne $prev_idx ]; then
+                monitor_idx=$(find_mon_idx $(LEFT $curr_idx))
+                conf_str+="xrandr --output ${mons[monitor_idx]} --left-of ${mons[curr_monitor_idx]};"
+                set_monitor_position $curr_idx $(LEFT $curr_idx)
+            fi
+        fi
+    fi
+    if [ $curr_idx_right -eq 1 ]; then
+        if [ $(($curr_idx%${#mons[@]})) -ne $((${#mons[@]}-1)) ]; then
+            if [ $(RIGHT $curr_idx) -ne $prev_idx ]; then
+                monitor_idx=$(find_mon_idx $(RIGHT $curr_idx))
+                conf_str+="xrandr --output ${mons[monitor_idx]} --right-of ${mons[curr_monitor_idx]};"
+                set_monitor_position $curr_idx $(RIGHT $curr_idx)
+            fi
+        fi
+    fi
+
+}
+
 mons=($(xrandr | grep -aoP ".+?\s(?=connected)" | tr " " "\n"))
 primary=$(xrandr | grep -aoP ".+?\s(?=connected primary)")
 last_mon=$primary
@@ -189,48 +266,14 @@ do
     clear_n 0
     case $checker in
     1)
-        for previous in `seq 0 1 $((${#mons[@]}-2))` 
+        
+        for it in `seq 1 1 $((${#mons[@]}-1))`
         do
-            for current in `seq $(($previous+1)) 1 $((${#mons[@]}-1))` 
-            do
-                case ${idx[current]} in
-                $(UP ${idx[previous]}))
-                    if [ $((${idx[previous]}/${#mons[@]})) -eq 0 ]; then
-                        continue
-                    fi
-                    
-                    conf_str+="xrandr --output ${mons[current]} --off;"
-			        conf_str+="xrandr --output ${mons[current]} --mode 1920x1080 --above ${mons[previous]};"
-                ;;
-                $(DOWN ${idx[previous]}))
-                    if [ $((${idx[previous]}/${#mons[@]})) -eq $((${#mons[@]}-1)) ]; then
-                        continue
-                    fi
-
-                    conf_str+="xrandr --output ${mons[current]} --off;"
-			        conf_str+="xrandr --output ${mons[current]} --mode 1920x1080 --below ${mons[previous]};"
-                ;;
-                $(LEFT ${idx[previous]}))
-                    if [ $((${idx[previous]}%${#mons[@]})) -eq 0 ]; then
-                        continue
-                    fi
-
-                    conf_str+="xrandr --output ${mons[current]} --off;"
-			        conf_str+="xrandr --output ${mons[current]} --mode 1920x1080 --left-of ${mons[previous]};"
-                ;;
-                $(RIGHT ${idx[previous]}))
-                    if [ $((${idx[previous]}%${#mons[@]})) -eq $((${#mons[@]}-1)) ]; then
-                        continue
-                    fi
-
-                    conf_str+="xrandr --output ${mons[current]} --off;"
-			        conf_str+="xrandr --output ${mons[current]} --mode 1920x1080 --right-of ${mons[previous]};"
-                ;;
-                esac
-            done
+            conf_str+="xrandr --output ${mons[it]} --mode 1920x1080;"
         done
+        set_monitor_position ${idx[0]} ${idx[0]}
 
-        echo $conf_str
+        eval $conf_str
         break
     ;;
     2)
