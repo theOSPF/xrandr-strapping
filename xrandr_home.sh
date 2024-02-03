@@ -163,13 +163,12 @@ mons=($(xrandr | grep -aoP ".+?\s(?=connected)" | tr " " "\n"))
 primary=$(xrandr | grep -aoP ".+?\s(?=connected primary)")
 last_mon=$primary
 idx=${!mons[@]}
+conf_str=""
 
 for it in `seq 0 1 ${#idx[@]}`
 do
 	idx[it]=-1
 done
-
-mons=("aaa" "bbb" "ccc" "ddd")
 
 declare -a matrix
 
@@ -190,15 +189,62 @@ do
     clear_n 0
     case $checker in
     1)
-        echo "dsdsdss"
+        for previous in `seq 0 1 $((${#mons[@]}-2))` 
+        do
+            for current in `seq $(($previous+1)) 1 $((${#mons[@]}-1))` 
+            do
+                case ${idx[current]} in
+                $(UP ${idx[previous]}))
+                    if [ $((${idx[previous]}/${#mons[@]})) -eq 0 ]; then
+                        continue
+                    fi
+                    
+                    conf_str+="xrandr --output ${mons[current]} --off;"
+			        conf_str+="xrandr --output ${mons[current]} --mode 1920x1080 --above ${mons[previous]};"
+                ;;
+                $(DOWN ${idx[previous]}))
+                    if [ $((${idx[previous]}/${#mons[@]})) -eq $((${#mons[@]}-1)) ]; then
+                        continue
+                    fi
+
+                    conf_str+="xrandr --output ${mons[current]} --off;"
+			        conf_str+="xrandr --output ${mons[current]} --mode 1920x1080 --below ${mons[previous]};"
+                ;;
+                $(LEFT ${idx[previous]}))
+                    if [ $((${idx[previous]}%${#mons[@]})) -eq 0 ]; then
+                        continue
+                    fi
+
+                    conf_str+="xrandr --output ${mons[current]} --off;"
+			        conf_str+="xrandr --output ${mons[current]} --mode 1920x1080 --left-of ${mons[previous]};"
+                ;;
+                $(RIGHT ${idx[previous]}))
+                    if [ $((${idx[previous]}%${#mons[@]})) -eq $((${#mons[@]}-1)) ]; then
+                        continue
+                    fi
+
+                    conf_str+="xrandr --output ${mons[current]} --off;"
+			        conf_str+="xrandr --output ${mons[current]} --mode 1920x1080 --right-of ${mons[previous]};"
+                ;;
+                esac
+            done
+        done
+
+        echo $conf_str
+        break
     ;;
     2)
+        re="^[0-$((${#mons[@]}-1))]"
         for ((;;))
         do 
             draw_cur_mons
             read -n1 from
+            if [ -z "$from" ]; then
+                printf "\r\033[K"
+                clear_n $((2*${#mons[@]}))
+                continue
+            fi
             printf "\r\033[K"
-            re='^[0-9]'
             if ! [[ $from =~ $re ]] ; then
                 clear_n $((2*${#mons[@]}-1))
                 case $from in
