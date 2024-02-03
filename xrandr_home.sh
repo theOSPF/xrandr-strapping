@@ -169,6 +169,8 @@ do
 	idx[it]=-1
 done
 
+mons=("aaa" "bbb" "ccc" "ddd")
+
 declare -a matrix
 
 len_mat=$((${#mons[@]}*${#mons[@]}))
@@ -179,10 +181,10 @@ do
 done
 
     #TODO сделать проверку на конфигурацию и выбор шаблона
-echo -e "Unknown configuration :( \n Entering manual mode..."
+echo -e "Unknown configuration :( \n Entering manual mode...\n"
 for ((;;))
 do
-    echo -e "\n Choose Wisely... \n 1) Save configuration and exit \n 2) Manual configuration \n 3) Off all exept primary"
+    echo -e "Choose Wisely... \n 1) Save configuration and exit \n 2) Manual configuration \n 3) Off all exept primary"
 
     read checker
     clear_n 0
