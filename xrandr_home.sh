@@ -238,7 +238,8 @@ function set_monitor_position {
 
 function check_configs {
     local has_config=-1
-    if [ -d "~/.xrandrs" ]; then
+    local hasdir=$(ls -la ~ | grep .xrandrs | wc -l)
+    if [ $hasdir -eq 1 ]; then
         has_config=0
         local current_display_state_hash=$1
         local config_names=($(ls ~/.xrandrs | cut -d " " -f 1))
@@ -264,7 +265,7 @@ function write_config {
       mkdir ~/.xrandrs
     fi
 
-    echo -e "name=$name \nscreens=${mons[@]} \nidx=${idx[@]}" > ~/.xrandrs/$current_display_state_hash
+    echo -e "name=$name\nscreens=${mons[@]}\nidx=${idx[@]}" > ~/.xrandrs/$current_display_state_hash
 }
 
 function read_config {
@@ -312,19 +313,26 @@ if [ $conf_is_finded -eq 1 ]; then
     conf_idx=""
     read_config $current_display_state_hash
 
-    echo -e "Config `$conf_name` is detected."
+    echo -e "Config \`$conf_name\` is detected."
     read -r -p "Enable config? (yes/edit/no) " response
     case "$response" in
         [yY][eE][sS]|[yY])
-            echo "Enabling `$conf_name`..."
-            idx=${conf_idx[@]}
+            echo -e "Enabling \`$conf_name\`..."
+            for it in ${!conf_idx[@]}
+            do
+                idx[it]=${conf_idx[it]}
+            done
             name=$conf_name
             resolve_config
-            break 3
+            exit
         ;;
         [eE][dD][iI][tT]|[eE])
-            echo "Enabling `$conf_name`..."
-            idx=${conf_idx[@]}
+            echo -e "Enabling \`$conf_name\`..."
+            for it in ${!conf_idx[@]}
+            do
+                idx[it]=${conf_idx[it]}
+            done
+
             name=$conf_name
         ;;
         *)
@@ -345,6 +353,7 @@ do
     clear_n 0
     case $checker in
     1)
+        read -r -p "Enter config name: " name
         resolve_config
         write_config $name mons $idx $conf_is_finded $current_display_state_hash
         break
