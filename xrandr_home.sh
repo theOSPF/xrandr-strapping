@@ -236,28 +236,98 @@ function set_monitor_position {
 
 }
 
+function check_configs {
+    local has_config=-1
+    if [ -d "~/.xrandrs" ]; then
+        has_config=0
+        local current_display_state_hash=$1
+        local config_names=($(ls ~/.xrandrs | cut -d " " -f 1))
+        for files_idx in ${config_names[@]}
+        do
+            if [ $current_display_state_hash = $files_idx ]; then
+                has_config=1
+                break
+            fi
+        done
+    fi
+    echo $has_config
+}
+
+function write_config {
+    local name=$1
+    eval `local mons=$$2`
+    local idxs=$3
+    local flag=$4
+    local current_display_state_hash=$5
+
+    if [ $flag -eq -1 ]; then
+      mkdir ~/.xrandrs
+    fi
+
+    echo -e "name=$name \nscreens=${mons[@]} \nidx=${idx[@]}" > ~/.xrandrs/$current_display_state_hash
+}
+
+function read_config {
+    local current_display_state_hash=$1
+    conf_name=$(cat ~/.xrandrs/$current_display_state_hash | grep -aoP "(?<=name=).*")
+    conf_idx=($(cat ~/.xrandrs/$current_display_state_hash | grep -aoP "(?<=idx=).*" | tr " " "\n"))
+}
+
+function resolve_config {
+    for it in `seq 1 1 $((${#mons[@]}-1))`
+    do
+        conf_str+="xrandr --output ${mons[it]} --mode 1920x1080;"
+    done
+    set_monitor_position ${idx[0]} ${idx[0]}
+
+    eval $conf_str
+}
+
+
 mons=($(xrandr | grep -aoP ".+?\s(?=connected)" | tr " " "\n"))
 primary=$(xrandr | grep -aoP ".+?\s(?=connected primary)")
 last_mon=$primary
 idx=${!mons[@]}
+name="default"
 conf_str=""
+current_display_state_hash=$(echo -n $mons | md5sum | cut -d' ' -f1)
+conf_is_finded=$(check_configs $current_display_state_hash)
 
 for it in `seq 0 1 ${#idx[@]}`
 do
 	idx[it]=-1
 done
 
-declare -a matrix
+if [ $conf_is_finded -eq 1 ]; then
+    conf_name=""
+    conf_idx=""
+    read_config $current_display_state_hash
 
-len_mat=$((${#mons[@]}*${#mons[@]}))
+    echo -e "Config `$conf_name` is detected."
+    read -r -p "Enable config? (yes/edit/no) " response
+    case "$response" in
+        [yY][eE][sS]|[yY])
+            echo "Enabling `$conf_name`..."
+            idx=${conf_idx[@]}
+            name=$conf_name
+            resolve_config
+            break 3
+        ;;
+        [eE][dD][iI][tT]|[eE])
+            echo "Enabling `$conf_name`..."
+            idx=${conf_idx[@]}
+            name=$conf_name
+        ;;
+        *)
+            echo -e "Entering manual mode...\n"
+        ;;
+    esac
 
-for it in `seq 0 1 $len_mat`
-do
-    matrix[$it]=$it
-done
+else
+    echo -e "Unknown configuration :( \n Entering manual mode...\n"
+fi
 
-    #TODO сделать проверку на конфигурацию и выбор шаблона
-echo -e "Unknown configuration :( \n Entering manual mode...\n"
+
 for ((;;))
 do
     echo -e "Choose Wisely... \n 1) Save configuration and exit \n 2) Manual configuration \n 3) Off all exept primary"
@@ -266,14 +336,8 @@ do
     clear_n 0
     case $checker in
     1)
-        
-        for it in `seq 1 1 $((${#mons[@]}-1))`
-        do
-            conf_str+="xrandr --output ${mons[it]} --mode 1920x1080;"
-        done
-        set_monitor_position ${idx[0]} ${idx[0]}
-
-        eval $conf_str
+        resolve_config
+        write_config $name mons $idx $conf_is_finded $current_display_state_hash
         break
     ;;
     2)
