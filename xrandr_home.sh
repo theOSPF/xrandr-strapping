@@ -298,6 +298,15 @@ do
 	idx[it]=-1
 done
 
+declare -a matrix
+
+len_mat=$((${#mons[@]}*${#mons[@]}))
+
+for it in `seq 0 1 $len_mat`
+do
+    matrix[$it]=$it
+done
+
 if [ $conf_is_finded -eq 1 ]; then
     conf_name=""
     conf_idx=""
