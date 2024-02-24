@@ -9,13 +9,15 @@ Xrandrs is ultimate lightweight command-line tool (strapping) writed on bash, de
 ## Installation
 
 ```shell
-sudo wget -O /usr/bin/xrandrs https://github.com/theOSPF/xrandr-strapping/blob/master/xrandr_home.sh
+sudo wget -O /usr/bin/xrandrs https://github.com/theOSPF/xrandr-strapping/blob/master/xrandr_home.sh; sudo chmod +x /usr/bin/xrandrs
 ```
 
 
 ## Autostart
 
 #### Awesome
+
+To autostart xrandrs in awesome add this line to end of rc.lua file.
 
 `os.execute("pgrep -u $USER -x xrandrs || (xrandrs &)")
 `
