@@ -52,12 +52,8 @@ function draw_cur {
         echo $out_str
     done    
 }
-# TODO сделать, чтоб решётка не ехала
-# clc_str="\033[""$((2*${#mons[@]}+2))""A"
-# $((2*${#mons[@]}+2))
+
 function clear_n {
-    # local clc_str="\033[""$1""A"
-    # echo -e $clc_str
     local num_str=$(($1))
     for it in `seq 0 1 $num_str`
     do
@@ -291,7 +287,7 @@ last_mon=$primary
 idx=${!mons[@]}
 name="default"
 conf_str=""
-current_display_state_hash=$(echo -n $mons | md5sum | cut -d' ' -f1)
+current_display_state_hash=$(echo -n ${mons[@]} | md5sum | cut -d' ' -f1)
 conf_is_finded=$(check_configs $current_display_state_hash)
 
 for it in `seq 0 1 ${#idx[@]}`
@@ -391,9 +387,8 @@ do
         do
             echo $mon
             if [ $mon != $primary ];
-                then
-                    pwd
-                # xrandr --output $mon --off
+                then    
+                 xrandr --output $mon --off
             fi
         done
     ;;
@@ -405,14 +400,3 @@ do
     clear_n 6
 done
 echo "All Done! Quiting..."
-
-# Первичное выстраивание в ряд
-#for mon in $mons
-#do
-#	if [ $mon != $primary ];
-#		then
-#			xrandr --output $mon --off
-#			xrandr --output $mon --mode 1920x1080 --right-of $last_mon
-#			last_mon=$mon
-#	fi
-#done
